@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="void" data-biome="void">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#05060a" />
+<title>Echo | پژواک</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ صفحه لودینگ ============ -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-logo">
+    <span class="logo-mark">E</span>
+    <span class="logo-text">Echo</span>
+  </div>
+  <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
+  <p class="loading-text" id="loadingText">بیدار می شی...</p>
+</div>
+
+<!-- ============ صفحه منو ============ -->
+<div class="menu-screen hidden" id="menuScreen">
+  <div class="bg-orbs" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+    <span class="orb orb-4"></span>
+  </div>
+
+  <div class="menu-inner">
+    <div class="menu-header">
+      <div class="menu-logo">
+        <span class="logo-mark big">E</span>
+        <h1 class="game-title">
+          <span class="title-echo">پژواک</span>
+        </h1>
+      </div>
+    </div>
+
+    <div class="menu-actions">
+      <button class="btn btn-primary btn-lg btn-play" id="btnPlay">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        شروع سفر
+      </button>
+
+      <button class="btn btn-outline btn-lg hidden" id="btnContinue">
+        ادامه از چک پوینت
+      </button>
+
+      <button class="btn btn-ghost btn-lg" id="btnSettings">
+        تنظیمات
+      </button>
+
+      <button class="btn btn-ghost btn-lg" id="btnAbout">
+        درباره بازی
+      </button>
+
+      <button class="btn btn-ghost btn-lg hidden" id="btnReset">
+        شروع دوباره از اول
+      </button>
+    </div>
+
+    <div class="menu-footer">
+      <div class="stat-pill">
+        <span class="stat-label">بهترین مسافت</span>
+        <span class="stat-value" id="bestDistanceDisplay">0 متر</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">بایوم</span>
+        <span class="stat-value" id="biomeDisplay">برزخ</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">موزیک</span>
+        <span class="stat-value" id="musicStatusLabel">بدون موزیک</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu-copyright">
+    ساخته شده با عشق — <span class="rainbow-text">آریا عزیزی</span>
+  </div>
+</div>
+
+<!-- ============ صفحه بازی ============ -->
+<div class="game-screen hidden" id="gameScreen">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD بالا -->
+  <div class="hud hud-top">
+    <div class="hud-item">
+      <span class="hud-label">مسافت</span>
+      <span class="hud-value" id="hudDistance">0</span>
+    </div>
+
+    <div class="hud-item">
+      <span class="hud-label">امتیاز</span>
+      <span class="hud-value" id="hudScore">0</span>
+    </div>
+
+    <div class="hud-item biome-item">
+      <span class="hud-label">منطقه</span>
+      <span class="hud-value" id="hudBiome">برزخ</span>
+    </div>
+
+    <button class="icon-btn hud-pause" id="btnPause" aria-label="توقف">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+        <rect x="6" y="5" width="4" height="14" rx="1"/>
+        <rect x="14" y="5" width="4" height="14" rx="1"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- HUD پایین: جان و انرژی -->
+  <div class="hud hud-bottom">
+    <div class="hearts-row" id="heartsRow">
+      <div class="heart" data-hp="1"></div>
+      <div class="heart" data-hp="2"></div>
+      <div class="heart" data-hp="3"></div>
+    </div>
+
+    <div class="energy-wrap">
+      <div class="energy-label">
+        <span>نور</span>
+        <span id="energyText">0</span>
+      </div>
+      <div class="energy-bar">
+        <div class="energy-fill" id="energyFill"></div>
+      </div>
+    </div>
+
+    <div class="powerups-row" id="powerupsRow">
+      <button class="powerup-icon" id="pwDash" title="دَش">
+        <span>دَش</span>
+        <div class="powerup-cd" id="pwDashCd"></div>
+      </button>
+      <button class="powerup-icon" id="pwShield" title="سپر">
+        <span>سپر</span>
+        <div class="powerup-cd" id="pwShieldCd"></div>
+      </button>
+      <button class="powerup-icon" id="pwFreeze" title="فریز">
+        <span>فریز</span>
+        <div class="powerup-cd" id="pwFreezeCd"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ویژوالایزر موزیک -->
+  <canvas class="music-visualizer" id="musicVisualizer"></canvas>
+
+  <!-- ناحیه کنترل لمسی (روی موبایل) -->
+  <div class="touch-hint hidden" id="touchHint">
+    <div class="touch-hint-inner">
+      <span class="arrow arrow-left">◀</span>
+      <span class="hint-text">بکش تا حرکت کنی</span>
+      <span class="arrow arrow-right">▶</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ لایه کاتسین ============ -->
+<div class="cutscene hidden" id="cutscene">
+  <div class="cutscene-bg" id="cutsceneBg"></div>
+  <div class="cutscene-content">
+    <div class="cutscene-text" id="cutsceneText"></div>
+    <div class="cutscene-author hidden" id="cutsceneAuthor"></div>
+  </div>
+  <div class="cutscene-controls">
+    <button class="btn btn-ghost btn-sm" id="cutsceneSkip">رد کردن</button>
+    <button class="btn btn-primary btn-sm hidden" id="cutsceneNext">ادامه</button>
+  </div>
+</div>
+
+<!-- ============ منوی توقف ============ -->
+<div class="modal-overlay hidden" id="pauseModal">
+  <div class="modal modal-sm" role="dialog" aria-modal="true">
+    <h3 class="modal-title">سفر متوقف شد</h3>
+    <p class="modal-sub" id="pauseSub">آروم باش. راهت همینه.</p>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" id="btnResume">ادامه سفر</button>
+      <button class="btn btn-outline btn-full" id="btnRestartFromPause">شروع دوباره</button>
+      <button class="btn btn-ghost btn-full" id="btnBackToMenu">بازگشت به منو</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ صفحه پایان بازی ============ -->
+<div class="modal-overlay hidden" id="gameOverModal">
+  <div class="modal modal-sm" role="dialog" aria-modal="true">
+    <h3 class="modal-title" id="gameOverTitle">نورت خاموش شد</h3>
+    <p class="modal-sub" id="gameOverSub">ولی پژواکت هنوز توی این دنیا می پیچه</p>
+
+    <div class="result-grid">
+      <div class="result-item">
+        <span class="result-label">مسافت</span>
+        <span class="result-value" id="resultDistance">0</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">امتیاز</span>
+        <span class="result-value" id="resultScore">0</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">بایوم</span>
+        <span class="result-value" id="resultBiome">برزخ</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">زمان</span>
+        <span class="result-value" id="resultTime">0s</span>
+      </div>
+    </div>
+
+    <p class="new-record hidden" id="newRecord">رکورد جدید زدی</p>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" id="btnPlayAgain">دوباره</button>
+      <button class="btn btn-ghost btn-full" id="btnBackToMenu2">بازگشت به منو</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ مودال پایان نهایی (Ending) ============ -->
+<div class="modal-overlay hidden" id="endingModal">
+  <div class="modal modal-lg" role="dialog" aria-modal="true">
+    <div class="ending-symbol">◈</div>
+    <h3 class="modal-title ending-title" id="endingTitle">پایان</h3>
+    <p class="ending-text" id="endingText"></p>
+
+    <div class="ending-choices" id="endingChoices">
+      <button class="btn btn-primary btn-full ending-choice" data-choice="purify" id="choicePurify">
+        نورت رو آزاد کن
+      </button>
+      <button class="btn btn-outline btn-full ending-choice" data-choice="watch" id="choiceWatch">
+        تماشا کن
+      </button>
+    </div>
+
+    <div class="modal-actions hidden" id="endingActions">
+      <button class="btn btn-primary btn-full" id="btnBackToMenu3">بازگشت به منو</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ مودال تنظیمات ============ -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="closeSettings" aria-label="بستن">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h3 class="modal-title">تنظیمات</h3>
+
+    <!-- موزیک -->
+    <div class="settings-section">
+      <h4 class="settings-subtitle">موزیک خودت</h4>
+      <p class="settings-hint">فایل صوتی رو انتخاب کن یا اینجا بنداز</p>
+
+      <div class="drop-zone" id="dropZone">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 16V4M12 4l-4 4M12 4l4 4"/>
+          <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+        </svg>
+        <p>فایل رو اینجا بنداز یا کلیک کن</p>
+        <label class="btn btn-primary btn-sm" for="musicFileInput">انتخاب فایل</label>
+        <input type="file" id="musicFileInput" accept="audio/*" hidden />
+      </div>
+
+      <div class="music-info hidden" id="musicInfo">
+        <div class="music-thumb">♪</div>
+        <div class="music-meta">
+          <span class="music-name" id="musicName">نام فایل</span>
+          <span class="music-size" id="musicSize">0 MB</span>
+        </div>
+        <button class="icon-btn danger" id="btnClearMusic" title="حذف">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <label class="switch-row">
+        <span>ذخیره موزیک برای دفعه بعد</span>
+        <input type="checkbox" id="saveMusicToggle" checked />
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+    </div>
+
+    <!-- صدا -->
+    <div class="settings-section">
+      <h4 class="settings-subtitle">صدا</h4>
+
+      <div class="range-row">
+        <label for="musicVolume">صدای موزیک</label>
+        <input type="range" id="musicVolume" min="0" max="100" value="70" />
+        <span class="range-value" id="musicVolumeLabel">70</span>
+      </div>
+
+      <div class="range-row">
+        <label for="ambientVolume">صدای محیط</label>
+        <input type="range" id="ambientVolume" min="0" max="100" value="80" />
+        <span class="range-value" id="ambientVolumeLabel">80</span>
+      </div>
+
+      <div class="range-row">
+        <label for="sfxVolume">افکت ها</label>
+        <input type="range" id="sfxVolume" min="0" max="100" value="80" />
+        <span class="range-value" id="sfxVolumeLabel">80</span>
+      </div>
+    </div>
+
+    <!-- گرافیک -->
+    <div class="settings-section">
+      <h4 class="settings-subtitle">گرافیک</h4>
+
+      <div class="chip-row" id="qualityChips">
+        <button class="chip" data-quality="low" id="qualLow">کم</button>
+        <button class="chip active" data-quality="medium" id="qualMedium">متوسط</button>
+        <button class="chip" data-quality="high" id="qualHigh">زیاد</button>
+      </div>
+
+      <label class="switch-row">
+        <span>ذرات پس زمینه</span>
+        <input type="checkbox" id="particlesToggle" checked />
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+
+      <label class="switch-row">
+        <span>افکت بلور</span>
+        <input type="checkbox" id="blurToggle" checked />
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+
+      <label class="switch-row">
+        <span>چرخه شب و روز</span>
+        <input type="checkbox" id="dayNightToggle" checked />
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+
+      <label class="switch-row">
+        <span>بارون و برف</span>
+        <input type="checkbox" id="weatherToggle" checked />
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+    </div>
+
+    <button class="btn btn-primary btn-full" id="closeSettings2">ذخیره و بستن</button>
+  </div>
+</div>
+
+<!-- ============ مودال درباره ============ -->
+<div class="modal-overlay hidden" id="aboutModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="closeAbout" aria-label="بستن">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h3 class="modal-title">درباره پژواک</h3>
+    <p class="about-p">زمین دیگه نفس نمی کشه. تو یه دونده ای که از شش بایوم عبور می کنه تا دلیل خرابی رو پیدا کنه.</p>
+    <p class="about-p">کنترل روی کامپیوتر: A و D یا کلید های چپ و راست برای حرکت، W یا Space برای پرش.</p>
+    <p class="about-p">کنترل روی موبایل: انگشتت رو چپ و راست بکش. برای پرش، روی صفحه ضربه بزن.</p>
+    <p class="about-p small">ساخته شده توسط <span class="rainbow-text">آریا عزیزی</span> بدون هیچ فریمورکی.</p>
+  </div>
+</div>
+
+<!-- ============ توست ============ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="script.js"></script>
+</body>
+  </html>
